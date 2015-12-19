@@ -5,6 +5,8 @@
 #define nMotor(n)  n-1
 Stepper_28BYJ48 _motor[13];
 
+unsigned int registroPosicion[13][3];
+int posicionRelativaMotores[13][2];
 
 
 void setup()
@@ -48,6 +50,7 @@ void inicializarMotores()
 
 void moverMotores()
 {
+  /*
   for(int i=1;i<=13;i++)
   {
       _motor[nMotor(i)].etapa1FullStep();
@@ -68,5 +71,11 @@ void moverMotores()
       _motor[nMotor(i)].etapa4FullStep();
   }
   _motor[0].delayPorStep();
+  */
+  for(int i=1;i<=13;i++)
+  {
+
+    _motor[nMotor(i)].moverMotorHaciaPosicion();
+  }
   
 }
