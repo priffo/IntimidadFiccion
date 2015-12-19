@@ -5,7 +5,9 @@
 
 // Define la cantidad de pasos a considerar radialmente
 // para el buffer de un motor
-#define pasosRadiales 20
+#define maxPasosRadiales 20
+// Define el minimo radio necesario para generar una respuesta
+#degine minPasosRadiales 10
 // Distancia entre radios equidistantes de un motor
 #define pasosSize 10
 
@@ -29,7 +31,7 @@ int posicionRelativaMotores[13][2];
 // Buffer para activacion de motores
 // - id del motor
 // - distancia radial en steps de la activacion futura
-int bufferActivacion[13][pasosRadiales]
+int bufferActivacion[13][maxPasosRadiales]
 
 void setup()
 {
@@ -74,8 +76,32 @@ void calcularPosiciones()
   if(valid)
   {
     // procedimiento de calculo
+    int distanciaRecorrida = distanciaRecorrida();
+    for(int i=1; i<=13; i++)
+    {
+      int distanciaFinal = distanciaPuntoFinal(i);
+      int traslacionAngular = traslacionAngular(i);
+      int affectedStep = distanciaFinal / pasosSize;
+      if(affectedStep - 1 < minPasosRadiales || affectedStep + 1 > maxPasosRadiales - 1)
+      {
+        // fuera de rango re respuesta
+      } else {
+        int movimiento = (traslacionAngular > 0)? 1 : -1;
+        movimiento *= distanciaRecorrida;
+        bufferActivacion[i][affectedStep-1] = (bufferActivacion[i][affectedStep-1]+movimiento)/2
+        bufferActivacion[i][affectedStep] = movimiento;
+        bufferActivacion[i][affectedStep+1] = (bufferActivacion[i][affectedStep+1]+movimiento)/2
+      }
+    }
   } else {
     // procedimiento de stand by
+  }
+  for(int i=0;i<13;i++)
+  {
+    for(int j=1;j<maxPasosRadiales;j++)
+    {
+      bufferActivacion[i][j-1] = bufferActivacion[i][j];
+    }
   }
 }
 
@@ -193,7 +219,7 @@ void inicializarArrays()
   // Inicializa el bufer de activacion
   for(int i=0; i<13; i++)
   {
-    for(int j=0; j<pasosRadiales; j++)
+    for(int j=0; j<maxPasosRadiales; j++)
     {
       bufferActivacion[i][j] = 0;
     }
