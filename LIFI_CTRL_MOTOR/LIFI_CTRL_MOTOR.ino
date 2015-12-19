@@ -2,10 +2,22 @@
 #include <Stepper_28BYJ48.h>
 
 #define nMotor(n)  n-1
+
+// Dark: agregar descripcion de esta instanciacion
 Stepper_28BYJ48 _motor[13];
 
+// Registro de posicion de los motores:
+// - id del motor
+// - instante de tiempo (0= t-0, 1= t-1, 2= t-2)
 unsigned int registroPosicion[13][3];
-unsigned int posicionUsuario[2];
+
+// Registro de la posicion del usuario
+// - instante de tiempo (0= t-0, 1= t-1)
+unsigned int posicionUsuario[2][2];
+
+// Posiciones relativs de cada morot respecto al radar
+// - id del motor
+// - distancia cartesiana relativa al radar (0= x, 1= y)
 int posicionRelativaMotores[13][2];
 
 void setup()
@@ -33,7 +45,6 @@ void obtenerPosicionUsuario()
 void calcularPosiciones()
 {
 }
-  
 
 // Mueve los motores a la ultima ubicacion calculada en el ciclo
 
@@ -108,8 +119,10 @@ void inicializarArrays()
   posicionRelativaMotores[nMotor(13)][0] = 0;
   posicionRelativaMotores[nMotor(13)][1] = 0;
   // Inicializa la posicion del usuario
-  posicionUsuario[0] = 0;
-  posicionUsuario[1] = 0;
+  posicionUsuario[0][0] = 0;
+  posicionUsuario[0][1] = 0;
+  posicionUsuario[1][0] = 0;
+  posicionUsuario[1][1] = 0;
 }
 
 // Iniciliza los motores para su uso
@@ -131,6 +144,8 @@ void inicializarMotores()
   _motor[nMotor(13)].Inicializar(50,48,46,44,FULL_STEP,52);
 }
 
+// Dark: Agregar descripcion de esta funcion
+
 bool esMovimientoValido(int idMotor)
 {
   if((((registroPosicion[nMotor(idMotor)][0] - registroPosicion[nMotor(idMotor)][1]) < 0) 
@@ -142,6 +157,8 @@ bool esMovimientoValido(int idMotor)
   }
   return false;
 }
+
+// Dark: agregar descripcion de esta funcion
 
 bool esSentidoHorario(int idMotor)
 {
