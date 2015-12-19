@@ -3,6 +3,12 @@
 
 #define nMotor(n)  n-1
 
+// Define la cantidad de pasos a considerar radialmente
+// para el buffer de un motor
+#define pasosRadiales 20
+// Distancia entre radios equidistantes de un motor
+#define pasosSize 10
+
 // Dark: agregar descripcion de esta instanciacion
 Stepper_28BYJ48 _motor[13];
 
@@ -19,6 +25,11 @@ unsigned int posicionUsuario[2][2];
 // - id del motor
 // - distancia cartesiana relativa al radar (0= x, 1= y)
 int posicionRelativaMotores[13][2];
+
+// Buffer para activacion de motores
+// - id del motor
+// - distancia radial en steps de la activacion futura
+int bufferActivacion[13][pasosRadiales]
 
 void setup()
 {
@@ -46,7 +57,26 @@ void obtenerPosicionUsuario()
 
 void calcularPosiciones()
 {
-
+  // Checking si radar mide 0,0
+  bool valid = true;
+  for(int i=0; i<2; i++)
+  {
+    for (int j=0; j<2; j++)
+    {
+      if (posicionUsuario(i][j] == 0)
+      {
+        valid = false;
+        i = 2;
+        j = 2;
+      }
+    }
+  }
+  if(valid)
+  {
+    // procedimiento de calculo
+  } else {
+    // procedimiento de stand by
+  }
 }
 
 // Mueve los motores a la ultima ubicacion calculada en el ciclo
@@ -126,6 +156,14 @@ void inicializarArrays()
   posicionUsuario[0][1] = 0;
   posicionUsuario[1][0] = 0;
   posicionUsuario[1][1] = 0;
+  // Inicializa el bufer de activacion
+  for(int i=0; i<13; i++)
+  {
+    for(int j=0; j<pasosRadiales; j++)
+    {
+      bufferActivacion[i][j] = 0;
+    }
+  }
 }
 
 // Iniciliza los motores para su uso
