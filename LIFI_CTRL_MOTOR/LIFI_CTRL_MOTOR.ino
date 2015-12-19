@@ -36,14 +36,17 @@ void loop() {
 
 void obtenerPosicionUsuario()
 {
-  posicionUsuario[0] = 0;
-  posicionUsuario[1] = 0;
+  posicionUsuario[1][0] = posicionUsuario[0][0];
+  posicionUsuario[1][1] = posicionUsuario[0][1];
+  posicionUsuario[0][0] = 0; // Dark: completar con theta del radar
+  posicionUsuario[0][1] = 0; // Dark: completar con distancia del radar
 }
 
 // Calcula las nuevas posiciones de los motores
 
 void calcularPosiciones()
 {
+
 }
 
 // Mueve los motores a la ultima ubicacion calculada en el ciclo
