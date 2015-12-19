@@ -7,7 +7,7 @@
 // para el buffer de un motor
 #define maxPasosRadiales 20
 // Define el minimo radio necesario para generar una respuesta
-#degine minPasosRadiales 10
+#define minPasosRadiales 10
 // Distancia entre radios equidistantes de un motor
 #define pasosSize 10
 
@@ -31,7 +31,7 @@ int posicionRelativaMotores[13][2];
 // Buffer para activacion de motores
 // - id del motor
 // - distancia radial en steps de la activacion futura
-int bufferActivacion[13][maxPasosRadiales]
+int bufferActivacion[13][maxPasosRadiales];
 
 void setup()
 {
@@ -65,7 +65,7 @@ void calcularPosiciones()
   {
     for (int j=0; j<2; j++)
     {
-      if (posicionUsuario(i][j] == 0)
+      if (posicionUsuario[i][j] == 0)
       {
         valid = false;
         i = 2;
@@ -76,21 +76,21 @@ void calcularPosiciones()
   if(valid)
   {
     // procedimiento de calculo
-    int distanciaRecorrida = distanciaRecorrida();
+    int recorrido = distanciaRecorrida();
     for(int i=1; i<=13; i++)
     {
       int distanciaFinal = distanciaPuntoFinal(i);
-      int traslacionAngular = traslacionAngular(i);
+      int variacionAngular = traslacionAngular(i);
       int affectedStep = distanciaFinal / pasosSize;
       if(affectedStep - 1 < minPasosRadiales || affectedStep + 1 > maxPasosRadiales - 1)
       {
         // fuera de rango re respuesta
       } else {
-        int movimiento = (traslacionAngular > 0)? 1 : -1;
-        movimiento *= distanciaRecorrida;
-        bufferActivacion[i][affectedStep-1] = (bufferActivacion[i][affectedStep-1]+movimiento)/2
+        int movimiento = (variacionAngular > 0) ? 1 : -1;
+        movimiento *= recorrido;
+        bufferActivacion[i][affectedStep-1] = (bufferActivacion[i][affectedStep-1]+movimiento)/2;
         bufferActivacion[i][affectedStep] = movimiento;
-        bufferActivacion[i][affectedStep+1] = (bufferActivacion[i][affectedStep+1]+movimiento)/2
+        bufferActivacion[i][affectedStep+1] = (bufferActivacion[i][affectedStep+1]+movimiento)/2;
       }
     }
   } else {
@@ -102,6 +102,7 @@ void calcularPosiciones()
     {
       bufferActivacion[i][j-1] = bufferActivacion[i][j];
     }
+    bufferActivacion[i][maxPasosRadiales-1] = 0;
   }
 }
 
@@ -109,20 +110,20 @@ void calcularPosiciones()
 
 int distanciaPuntoFinal(int idMotor)
 {
-  int xComp = cos(posicionUsuario[0][0])*posicionUsuarop[0][1] - posicionRelativaMotores[nMotor(idMotor)][0];
+  int xComp = cos(posicionUsuario[0][0])*posicionUsuario[0][1] - posicionRelativaMotores[nMotor(idMotor)][0];
   int yComp = sin(posicionUsuario[0][0])*posicionUsuario[0][1] - posicionRelativaMotores[nMotor(idMotor)][1];
-  return sqrt(xComp*xCom + yComp*yComp);
+  return sqrt(xComp*xComp + yComp*yComp);
 }
 
-// Calcula la distancia recorrida entre los 2 últimos instantes
+// Calcula la distancia recorrida entre los 2 ultimos instantes
 
 int distanciaRecorrida()
 {
   int distancia = 0;
   distancia += posicionUsuario[0][1]*posicionUsuario[0][1];
   distancia -= posicionUsuario[1][1]*posicionUsuario[1][1];
-  distancia -= 2*posicionUsuario[0][1]*posicionUsuario[1][1]*cos(posicionUsuario[0][0]*cos(posicionUsuario[1][0];
-  distancia -= 2*posicionUsuario[0][1]*posicionUsuario[1][1]*sin(posicionUsuario[0][0]*sin(posicionUsuario[1][0];
+  distancia -= 2*posicionUsuario[0][1]*posicionUsuario[1][1]*cos(posicionUsuario[0][0])*cos(posicionUsuario[1][0]);
+  distancia -= 2*posicionUsuario[0][1]*posicionUsuario[1][1]*sin(posicionUsuario[0][0])*sin(posicionUsuario[1][0]);
   return sqrt(distancia);
 }
 
@@ -130,12 +131,12 @@ int distanciaRecorrida()
 
 int traslacionAngular(int idMotor)
 {
-  int den = sin(posicionUsuario[0][0] - posicionRelativaMotores[nMotor(idMotor)][1];
-  int num = cos(posicionUsuario[0][0] - posicionRelativaMotores[nMotor(idMotor)][0];
-  int theta = arctan(den/num);
-  den = sin(posicionUsuario[1][0] - posicionRelativaMotores[nMotor(idMotor)][1];
-  num = cos(posicionUsuario[1][0] - posicionRelativaMotores[nMotor(idMotor)][0];
-  theta -= arctan(den/num);
+  int den = sin(posicionUsuario[0][0]) - posicionRelativaMotores[nMotor(idMotor)][1];
+  int num = cos(posicionUsuario[0][0]) - posicionRelativaMotores[nMotor(idMotor)][0];
+  int theta = atan(den/num);
+  den = sin(posicionUsuario[1][0]) - posicionRelativaMotores[nMotor(idMotor)][1];
+  num = cos(posicionUsuario[1][0]) - posicionRelativaMotores[nMotor(idMotor)][0];
+  theta -= atan(den/num);
   return theta;
 }
 
