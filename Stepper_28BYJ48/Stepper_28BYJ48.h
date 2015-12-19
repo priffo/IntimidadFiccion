@@ -37,6 +37,7 @@ public:
 	void irAPosicion(int posicion);
 	void EncontrarCeroMotor(int);
 	void EncontrarCeroMotor();
+	void moverMotorHaciaPosicion(int posicionFinal, bool sentidoHorario);
 
 	void delayPorStep();
 	
@@ -57,7 +58,7 @@ public:
 private:
 
 	void moverMotorUnStep(bool sentidoHorario);
-	
+	void moverUnStep(bool sentidoHorario,int tamanoStep);
 
 	
 	void apagarMotor();

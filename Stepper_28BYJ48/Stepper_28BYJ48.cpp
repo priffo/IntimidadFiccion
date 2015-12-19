@@ -300,7 +300,7 @@ bool Stepper_28BYJ48::hayCampoPresente()
 
 void Stepper_28BYJ48::moverUnStep(bool sentidoHorario,int tamanoStep)
 {
-  static etapaActual = 1;
+  static int etapaActual = 1;
   if(tamanoStep == FULL_STEP)
   {
     switch(etapaActual)
@@ -370,5 +370,8 @@ void Stepper_28BYJ48::moverUnStep(bool sentidoHorario,int tamanoStep)
 
 void Stepper_28BYJ48::moverMotorHaciaPosicion(int posicionFinal, bool sentidoHorario)
 {
-    moverUnStep(sentidoHorario);
+  if(_posicionMotor != posicionFinal)
+  {
+    moverUnStep(sentidoHorario,FULL_STEP);
+  }
 }
