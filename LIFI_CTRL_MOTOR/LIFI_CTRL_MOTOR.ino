@@ -79,6 +79,40 @@ void calcularPosiciones()
   }
 }
 
+// Calcula la distancia en cm a la posicion final
+
+int distanciaPuntoFinal(int idMotor)
+{
+  int xComp = cos(posicionUsuario[0][0])*posicionUsuarop[0][1] - posicionRelativaMotores[nMotor(idMotor)][0];
+  int yComp = sin(posicionUsuario[0][0])*posicionUsuario[0][1] - posicionRelativaMotores[nMotor(idMotor)][1];
+  return sqrt(xComp*xCom + yComp*yComp);
+}
+
+// Calcula la distancia recorrida entre los 2 últimos instantes
+
+int distanciaRecorrida()
+{
+  int distancia = 0;
+  distancia += posicionUsuario[0][1]*posicionUsuario[0][1];
+  distancia -= posicionUsuario[1][1]*posicionUsuario[1][1];
+  distancia -= 2*posicionUsuario[0][1]*posicionUsuario[1][1]*cos(posicionUsuario[0][0]*cos(posicionUsuario[1][0];
+  distancia -= 2*posicionUsuario[0][1]*posicionUsuario[1][1]*sin(posicionUsuario[0][0]*sin(posicionUsuario[1][0];
+  return sqrt(distancia);
+}
+
+// Calcula la traslacion angular del ultimo movimiento
+
+int traslacionAngular(int idMotor)
+{
+  int den = sin(posicionUsuario[0][0] - posicionRelativaMotores[nMotor(idMotor)][1];
+  int num = cos(posicionUsuario[0][0] - posicionRelativaMotores[nMotor(idMotor)][0];
+  int theta = arctan(den/num);
+  den = sin(posicionUsuario[1][0] - posicionRelativaMotores[nMotor(idMotor)][1];
+  num = cos(posicionUsuario[1][0] - posicionRelativaMotores[nMotor(idMotor)][0];
+  theta -= arctan(den/num);
+  return theta;
+}
+
 // Mueve los motores a la ultima ubicacion calculada en el ciclo
 
 void moverMotores()
