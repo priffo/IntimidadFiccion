@@ -65,8 +65,12 @@ void setup()
   //start the library, pass in the data details and the name of the serial port. Can be Serial, Serial1, Serial2, etc.
   ET.begin(details(mydata), &Serial);
 
+
+
   inicializarArrays();
   inicializarMotores();
+  acercando = true;
+  posicionUsuario[0][1] = 105;
 }
 
 void loop()
@@ -88,7 +92,28 @@ void obtenerPosicionUsuario()
 {
   posicionUsuario[1][0] = posicionUsuario[0][0];
   posicionUsuario[1][1] = posicionUsuario[0][1];
+  
+  //dummy data
+  posicionUsuario[0][0] = 0; // Dark: completar con theta del radar
+  if(acercando)
+  {
+    //dummy data
+    posicionUsuario[0][1] = ((posicionUsuario[0][1] + 10));
+    if(posicionUsuario[0][1] >= 155)
+    {
+      acercando = false;
+    }
+  }
+  else
+  {
+    posicionUsuario[0][1] = ((posicionUsuario[0][1] - 10));
+    if(posicionUsuario[0][1] <= 105)
+    {
+      acercando = true;
+    }
+  }
 
+/*
   while(!ET.receiveData())
   {
     //this is how you access the variables. [name of the group].[variable name]
@@ -96,6 +121,7 @@ void obtenerPosicionUsuario()
     posicionUsuario[0][0] = mydata.angulo; // Dark: completar con theta del radar
     posicionUsuario[0][1] = mydata.distancia; // Dark: completar con distancia del radar
   }
+  */
 }
 
 // Calcula las nuevas posiciones de los motores
