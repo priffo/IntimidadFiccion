@@ -21,7 +21,7 @@
 // o disminuir el efecto sobre el movimiento
 #define sensibilidadMovimiento 1.0
 // Tiempo de sincronizacion del ciclo de correccion de motores
-#define tiempoCorreccion 100000
+#define tiempoCorreccion 500000
 
 bool acercando; // Dark: to delete
 
@@ -65,27 +65,85 @@ void setup()
 {
   Serial.begin(9600);
   //start the library, pass in the data details and the name of the serial port. Can be Serial, Serial1, Serial2, etc.
-  ET.begin(details(mydata), &Serial);
-
-
-
+  //ET.begin(details(mydata), &Serial);
+  ////Serial.println("inicio");
   inicializarArrays();
+  ////Serial.println("arrays Inicializados");
   inicializarMotores();
+  ////Serial.println("motores Inicializados");
   acercando = true;
   posicionUsuario[0][1] = 105;
+  ////Serial.println("fin setup");
 }
+
+int z = 0;
 
 void loop()
 {
+  /*
+  for(int i=1;i<=13;i++)
+  {
+    _motor[nMotor(i)].moverMotorHaciaPosicion(2047,true);
+  }
+  _motor[1].delayPorStep();
+  */
+  
+  //Serial.println("loop");
   obtenerPosicionUsuario();
+  //Serial.println("loop 1");
   for(int i=0; i<correccionesMotor; i++)
   {
     unsigned long tiempoEspera = micros();
+      //Serial.println("loop 2");
     calcularPosiciones();
-    moverMotores();
+      //Serial.println("loop 3");
+    //moverMotores();
+      //Serial.println("loop 4");
     tiempoEspera = tiempoCorreccion - (micros() - tiempoEspera);
-    delay(tiempoEspera);
+      //Serial.println("loop 5");
+      String tiempoEsperaString = String (tiempoEspera);
+      Serial.println("tiempoEspera = " + tiempoEsperaString);
+      
+      delayMicroseconds(tiempoEspera);
+      //Serial.println("loop 6");
   }
+  if(z = 0)
+  {
+    
+  for(int i=1;i<=13;i++)
+  {
+      _motor[nMotor(i)].etapa1FullStep();
+  }
+  _motor[0].delayPorStep();
+  }
+  
+  if(z = 1)
+  {
+  for(int i=1;i<=13;i++)
+  {
+      _motor[nMotor(i)].etapa2FullStep();
+  }
+  _motor[0].delayPorStep();
+  }
+  
+  if(z = 2)
+  {
+  for(int i=1;i<=13;i++)
+  {
+      _motor[nMotor(i)].etapa3FullStep();
+  }
+  _motor[0].delayPorStep();
+  }
+  if(z = 3)
+  {
+  for(int i=1;i<=13;i++)
+  {
+      _motor[nMotor(i)].etapa4FullStep();
+  }
+  _motor[0].delayPorStep();
+  }
+  z++;
+  z = z % 4;
 }
 
 // Refresca la posicion del usuario
@@ -138,7 +196,7 @@ void calcularPosiciones()
     {
       if (posicionUsuario[i][j] == 0)
       {
-        valid = false;
+        //valid = false;
         i = 2;
         j = 2;
       }
@@ -148,16 +206,26 @@ void calcularPosiciones()
   {
     // procedimiento de calculo
     int recorrido = distanciaRecorrida()*sensibilidadMovimiento;
+    String recorridoString = String(recorrido);
+    //Serial.println("recorridoString = "+ recorridoString);
+    
     for(int i=1; i<=13; i++)
     {
       int distanciaFinal = distanciaPuntoFinal(i);
-      int variacionAngular = traslacionAngular(i);
+      double variacionAngular = traslacionAngular(i);
+      
+      String variacionAngularString = String(variacionAngular);
+      String iString = String (i);
+      //Serial.println("variacionAngularString " + iString + " = "+ variacionAngularString);
+        
       int affectedStep = distanciaFinal / pasosSize;
       if(affectedStep - 1 < minPasosRadiales || affectedStep + 1 > maxPasosRadiales - 1)
       {
         // fuera de rango re respuesta
       } else {
         int movimiento = (variacionAngular > 0) ? 1 : -1;
+        String movimientoString = String(movimiento);
+        //Serial.println("movimientoString = "+ movimientoString);
         movimiento *= recorrido;
         bufferActivacion[i][affectedStep-1] = (bufferActivacion[i][affectedStep-1]+movimiento)/2;
         bufferActivacion[i][affectedStep] = movimiento;
@@ -177,18 +245,22 @@ void calcularPosiciones()
   }
   for(int i=0; i<13;  i++)
   {
-    for(int j=1; j<3; j++)
+    for(int j=2; j>1; j--)
     {
-      registroPosicion[i][j-1] = registroPosicion[i][j];
+      registroPosicion[i][j] = registroPosicion[i][j-1];
     }
-    registroPosicion[i][2] += bufferActivacion[i][stepIntegracion];
-    if(registroPosicion[i][2] > 2047)
+    registroPosicion[i][0] += bufferActivacion[i][stepIntegracion];
+    if(registroPosicion[i][0] > 2047)
     {
-      registroPosicion[i][2] -= 2048;
+      registroPosicion[i][0] -= 2048;
     }
-    if(registroPosicion[i][2] < 0){
-      registroPosicion[i][2] += 2048;
+    if(registroPosicion[i][0] < 0){
+      registroPosicion[i][0] += 2048;
     }
+    int lala = registroPosicion[i][0];
+    String registroPosicion = String(lala);
+    String iString = String(i);
+    //Serial.println("registroPosicion " + iString +" = " + registroPosicion);
   }
 }
 
@@ -207,7 +279,12 @@ int distanciaRecorrida()
 {
   int distancia = 0;
   distancia += posicionUsuario[0][1]*posicionUsuario[0][1];
-  distancia -= posicionUsuario[1][1]*posicionUsuario[1][1];
+  distancia += posicionUsuario[1][1]*posicionUsuario[1][1];
+  
+  int dummy = posicionUsuario[1][1];
+  String dummyString = String(dummy);
+  //Serial.println("posicionUsuario[1][1] = "+ dummyString);
+    
   distancia -= 2*posicionUsuario[0][1]*posicionUsuario[1][1]*cos(posicionUsuario[0][0])*cos(posicionUsuario[1][0]);
   distancia -= 2*posicionUsuario[0][1]*posicionUsuario[1][1]*sin(posicionUsuario[0][0])*sin(posicionUsuario[1][0]);
   return sqrt(distancia);
@@ -215,14 +292,14 @@ int distanciaRecorrida()
 
 // Calcula la traslacion angular del ultimo movimiento
 
-int traslacionAngular(int idMotor)
+double traslacionAngular(int idMotor)
 {
-  int den = sin(posicionUsuario[0][0]) - posicionRelativaMotores[nMotor(idMotor)][1];
-  int num = cos(posicionUsuario[0][0]) - posicionRelativaMotores[nMotor(idMotor)][0];
-  int theta = atan(den/num);
-  den = sin(posicionUsuario[1][0]) - posicionRelativaMotores[nMotor(idMotor)][1];
-  num = cos(posicionUsuario[1][0]) - posicionRelativaMotores[nMotor(idMotor)][0];
-  theta -= atan(den/num);
+  double num = sin(posicionUsuario[0][0]) * posicionUsuario[0][1] - posicionRelativaMotores[nMotor(idMotor)][1];
+  double den = cos(posicionUsuario[0][0]) * posicionUsuario[0][1] - posicionRelativaMotores[nMotor(idMotor)][0];
+  double theta = atan(num/den) * 180 / 3.14159;
+  num = sin(posicionUsuario[1][0]) * posicionUsuario[1][1] - posicionRelativaMotores[nMotor(idMotor)][1];
+  den = cos(posicionUsuario[1][0]) * posicionUsuario[1][1] - posicionRelativaMotores[nMotor(idMotor)][0];
+  theta -= atan(num/den) * 180 / 3.14159;
   return theta;
 }
 
@@ -251,14 +328,23 @@ void moverMotores()
       _motor[nMotor(i)].etapa4FullStep();
   }
   _motor[0].delayPorStep();
+  
   */
   for(int i=1;i<=13;i++)
   {
+    String posicion = String(registroPosicion[nMotor(i)][0]);
+    //Serial.println("posicion = "+ posicion);
+    _motor[nMotor(i)].moverMotorHaciaPosicion(registroPosicion[nMotor(i)][0],esSentidoHorario(i));
+    /*
     if(esMovimientoValido(i))
     {
+      
       _motor[nMotor(i)].moverMotorHaciaPosicion(registroPosicion[nMotor(i)][0],esSentidoHorario(i));
     }
+    */
   }
+  
+  
 }
 
 // Inicializa los arrays para comunicacion de estados
@@ -330,6 +416,11 @@ void inicializarMotores()
   _motor[nMotor(11)].Inicializar(30,28,26,24,FULL_STEP,32);
   _motor[nMotor(12)].Inicializar(40,38,36,34,FULL_STEP,42);
   _motor[nMotor(13)].Inicializar(50,48,46,44,FULL_STEP,52);
+  
+  for(int i=1;i<=13;i++)
+  {
+    //_motor[nMotor(13)].EncontrarCeroMotor(0);
+  }
 }
 
 //Verifica que el movimiento que va a realizar sea un movimiento válido,
