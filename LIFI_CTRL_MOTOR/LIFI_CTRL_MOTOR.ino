@@ -13,15 +13,15 @@
 #define pasosSize 10
 // Numero de repeticiones de la correccion de la posicion de los
 // motores entre cada lectura de la posicion del usuario
-#define correccionesMotor 3
+#define correccionesMotor 1
 // Define el step del buffer que es integrado para la posicion
 // futura del motor
 #define stepIntegracion 5
 // Factor de la distacia recorrida por el usuario para acentuar
 // o disminuir el efecto sobre el movimiento
-#define sensibilidadMovimiento 1.0
+#define sensibilidadMovimiento 10.0
 // Tiempo de sincronizacion del ciclo de correccion de motores
-#define tiempoCorreccion 500000
+#define tiempoCorreccion 1000000
 
 bool acercando; // Dark: to delete
 
@@ -74,22 +74,23 @@ void setup()
   acercando = true;
   posicionUsuario[0][1] = 105;
   ////Serial.println("fin setup");
+  delay(5000);
+  Serial.println("init ready");
 }
 
 int z = 0;
-
+int globalCounter = 0;
 void loop()
 {
   
-  for(int i=1;i<=13;i++)
-  {  
-    _motor[nMotor(i)].moverMotorHaciaPosicion(2047,true);
-  }
-  _motor[1].delayPorStep();
+  // for(int i=1;i<=13;i++)
+  // {  
+  //  _motor[nMotor(i)].moverMotorHaciaPosicion(2047,true);
+  // }
+  // _motor[1].delayPorStep();
   
-  
-  /*
   //Serial.println("loop");
+  if(globalCounter++==0){
   obtenerPosicionUsuario();
   //Serial.println("loop 1");
   for(int i=0; i<correccionesMotor; i++)
@@ -98,17 +99,20 @@ void loop()
       //Serial.println("loop 2");
     calcularPosiciones();
       //Serial.println("loop 3");
-    moverMotores();
+    //moverMotores();
       //Serial.println("loop 4");
     tiempoEspera = tiempoCorreccion - (micros() - tiempoEspera);
       //Serial.println("loop 5");
-      String tiempoEsperaString = String (tiempoEspera);
-      Serial.println("tiempoEspera = " + tiempoEsperaString);
-      
-      //delayMicroseconds(tiempoEspera);
+    String tiempoEsperaString = String (tiempoEspera);
+    //Serial.println("tiempoEspera = " + tiempoEsperaString);
+    //delay(tiempoEspera/1000);
       //Serial.println("loop 6");
   }
-  */
+  }
+  globalCounter=globalCounter % 512;
+  moverMotores();
+  delay(2);
+  
   /*
   if(z = 0)
   {
@@ -176,6 +180,10 @@ void obtenerPosicionUsuario()
       acercando = true;
     }
   }
+  
+  String theta = String(posicionUsuario[0][0]);
+  String distancia = String(posicionUsuario[0][1]);
+  //Serial.println("Pos = (" + theta + "," + distancia + ")");
 
 /*
   while(!ET.receiveData())
@@ -212,58 +220,69 @@ void calcularPosiciones()
     int recorrido = distanciaRecorrida()*sensibilidadMovimiento;
     String recorridoString = String(recorrido);
     //Serial.println("recorridoString = "+ recorridoString);
-    
     for(int i=1; i<=13; i++)
     {
-      int distanciaFinal = distanciaPuntoFinal(i);
-      double variacionAngular = traslacionAngular(i);
-      
+      int distanciaFinal = distanciaPuntoFinal(nMotor(i));
+      String distanciaFinalString = String(distanciaFinal);
+      double variacionAngular = traslacionAngular(nMotor(i));
       String variacionAngularString = String(variacionAngular);
-      String iString = String (i);
-      //Serial.println("variacionAngularString " + iString + " = "+ variacionAngularString);
-        
       int affectedStep = distanciaFinal / pasosSize;
+      String affectedStepString = String(affectedStep);
+      if (nMotor(i) == 4) {
+        //String iString = String (i);
+        //Serial.println("distanciaFinal/variacionAngular " + iString + " = "+ distanciaFinalString + " - " + variacionAngularString + " - " + affectedStep);
+      }
       if(affectedStep - 1 < minPasosRadiales || affectedStep + 1 > maxPasosRadiales - 1)
       {
         // fuera de rango re respuesta
       } else {
-        int movimiento = (variacionAngular > 0) ? 1 : -1;
+        int movimiento = (variacionAngular > 0) ? 1 : -1; 
         String movimientoString = String(movimiento);
-        //Serial.println("movimientoString = "+ movimientoString);
         movimiento *= recorrido;
-        bufferActivacion[i][affectedStep-1] = (bufferActivacion[i][affectedStep-1]+movimiento)/2;
-        bufferActivacion[i][affectedStep] = movimiento;
-        bufferActivacion[i][affectedStep+1] = (bufferActivacion[i][affectedStep+1]+movimiento)/2;
+        String newMovimiento = String(movimiento);
+        if (nMotor(i)==4){
+          //Serial.println("movimientoString = "+ movimientoString + " - " + newMovimiento);
+        }
+        bufferActivacion[nMotor(i)][affectedStep-1] = (bufferActivacion[i][affectedStep-1]+movimiento)/2;
+        bufferActivacion[nMotor(i)][affectedStep] += movimiento;
+        bufferActivacion[nMotor(i)][affectedStep+1] = (bufferActivacion[i][affectedStep+1]+movimiento)/2;
       }
     }
   } else {
     // procedimiento de stand by
   }
-  for(int i=0;i<13;i++)
+  for(int i=1;i<=13;i++)
   {
     for(int j=1;j<maxPasosRadiales;j++)
     {
-      bufferActivacion[i][j-1] = bufferActivacion[i][j];
+      bufferActivacion[nMotor(i)][j-1] = bufferActivacion[nMotor(i)][j];
     }
-    bufferActivacion[i][maxPasosRadiales-1] = 0;
+    bufferActivacion[nMotor(i)][maxPasosRadiales-1] = 0;
   }
-  for(int i=0; i<13;  i++)
+  for(int i=1; i<=13;  i++)
   {
-    for(int j=2; j>1; j--)
+    for(int j=2; j>0; j--)
     {
-      registroPosicion[i][j] = registroPosicion[i][j-1];
+      registroPosicion[nMotor(i)][j] = registroPosicion[i][j-1];
     }
-    registroPosicion[i][0] += bufferActivacion[i][stepIntegracion];
-    if(registroPosicion[i][0] > 2047)
+    if (nMotor(i)==4){
+      String integra = String(bufferActivacion[nMotor(i)][stepIntegracion]);
+      //Serial.println("movimientoString = " +  integra);
+    }
+    registroPosicion[nMotor(i)][0] += bufferActivacion[nMotor(i)][stepIntegracion];
+    if(registroPosicion[nMotor(i)][0] > 2047)
     {
-      registroPosicion[i][0] -= 2048;
+      registroPosicion[nMotor(i)][0] -= 2048;
     }
-    if(registroPosicion[i][0] < 0){
-      registroPosicion[i][0] += 2048;
+    if(registroPosicion[nMotor(i)][0] < 0){
+      registroPosicion[nMotor(i)][0] += 2048;
     }
-    int lala = registroPosicion[i][0];
-    String registroPosicion = String(lala);
-    String iString = String(i);
+    if (nMotor(i)==4){
+      int lala = registroPosicion[nMotor(i)][1];
+      String registroPosicion = String(lala);
+      String integra = String(bufferActivacion[nMotor(i)][stepIntegracion]);
+      //Serial.println("mov = " + integra + " - " + registroPosicion);
+    }
     //Serial.println("registroPosicion " + iString +" = " + registroPosicion);
   }
 }
@@ -336,7 +355,8 @@ void moverMotores()
   */
   for(int i=1;i<=13;i++)
   {
-    String posicion = String(registroPosicion[nMotor(i)][0]);
+    if (i == 4){
+    //String posicion = String(registroPosicion[nMotor(i)][0]);
     //Serial.println("posicion = "+ posicion);
     _motor[nMotor(i)].moverMotorHaciaPosicion(registroPosicion[nMotor(i)][0],esSentidoHorario(i));
     /*
@@ -345,12 +365,10 @@ void moverMotores()
       
       _motor[nMotor(i)].moverMotorHaciaPosicion(registroPosicion[nMotor(i)][0],esSentidoHorario(i));
     }
-    */
-    _motor[nMotor(i)].delayPorStep();
+    */}
+    
   }
-  
-  
-  
+  _motor[nMotor(0)].delayPorStep();
 }
 
 // Inicializa los arrays para comunicacion de estados
@@ -425,7 +443,7 @@ void inicializarMotores()
   
   for(int i=1;i<=13;i++)
   {
-    _motor[nMotor(i)].EncontrarCeroMotor();
+    //_motor[nMotor(i)].EncontrarCeroMotor();
   }
 }
 
@@ -451,10 +469,22 @@ bool esMovimientoValido(int idMotor)
 
 bool esSentidoHorario(int idMotor)
 {
-  if((registroPosicion[nMotor(idMotor)][0] - registroPosicion[nMotor(idMotor)][1]) < 0)
+  bool toReturn = false;
+  int sentidoStep = registroPosicion[nMotor(idMotor)][0] - registroPosicion[nMotor(idMotor)][1];
+  if(sentidoStep < 0)
   {
-    return false;
+    toReturn = false;
+  } else {
+    toReturn = true;
   }
-  return true;
+  if(abs(sentidoStep) > 1000){
+    toReturn = !toReturn;
+  }
+  //if (globalCounter == 0 && nMotor(idMotor) == 4){
+  //  String toPrint = (toReturn)? "derecha" : "izquierda";
+  //  String sentidoStepString = String(sentidoStep);
+  //  Serial.println("sentido = "+ toPrint + " - " + sentidoStepString);
+  //}
+  return toReturn;
 }
 
