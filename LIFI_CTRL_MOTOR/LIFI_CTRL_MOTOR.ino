@@ -487,4 +487,3 @@ bool esSentidoHorario(int idMotor)
   //}
   return toReturn;
 }
-
