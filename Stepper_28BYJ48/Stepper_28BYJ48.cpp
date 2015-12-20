@@ -40,31 +40,34 @@ void Stepper_28BYJ48::Inicializar(int PIN_FASE1,int PIN_FASE2,int PIN_FASE3,int 
 void Stepper_28BYJ48::EncontrarCeroMotor(int offSet)
 {
 	int countMovimientosRealizados = 0;
-	Serial.println("iniciando calibracion motor");
+	//Serial.println("iniciando calibracion motor");
 	if(hayCampoPresente())
     {
       while(hayCampoPresente())
       {
         moverMotor(1,GIRO_SENTIDO_HORARIO);
+        delayPorStep();
       }
     }
-
     //busca el primer punto donde se detecte el campo magnético del imán
     while(!hayCampoPresente())
     {
         moverMotor(1,GIRO_SENTIDO_ANTIHORARIO);
+        delayPorStep();
     }
     int nStepsConIman = 0;
     while(hayCampoPresente())
     {
         nStepsConIman++;
         moverMotor(1,GIRO_SENTIDO_ANTIHORARIO);
+        delayPorStep();
     }
 
 
     if(nStepsConIman > 1)
     {
         moverMotor(nStepsConIman/2,GIRO_SENTIDO_HORARIO);
+        delayPorStep();
     }
 
 	//irAPosicion(offSet);
@@ -148,6 +151,7 @@ void Stepper_28BYJ48::resetPosicion()
 
 void Stepper_28BYJ48::etapa1FullStep()
 {
+  //Serial.println("etapa 1 ");
   digitalWrite(_pinFase1,HIGH);
   digitalWrite(_pinFase2,HIGH);
   digitalWrite(_pinFase3,LOW);
@@ -155,6 +159,7 @@ void Stepper_28BYJ48::etapa1FullStep()
 }
 void Stepper_28BYJ48::etapa2FullStep()
 {
+  //Serial.println("etapa 2 ");
   digitalWrite(_pinFase1,LOW);
   digitalWrite(_pinFase2,HIGH);
   digitalWrite(_pinFase3,HIGH);
@@ -162,6 +167,7 @@ void Stepper_28BYJ48::etapa2FullStep()
 }
 void Stepper_28BYJ48::etapa3FullStep()
 {
+  //Serial.println("etapa 3 ");
   digitalWrite(_pinFase1,LOW);
   digitalWrite(_pinFase2,LOW);
   digitalWrite(_pinFase3,HIGH);
@@ -169,6 +175,7 @@ void Stepper_28BYJ48::etapa3FullStep()
 }
 void Stepper_28BYJ48::etapa4FullStep()
 {
+  //Serial.println("etapa 4 ");
   digitalWrite(_pinFase1,HIGH);
   digitalWrite(_pinFase2,LOW);
   digitalWrite(_pinFase3,LOW);
@@ -261,26 +268,53 @@ bool Stepper_28BYJ48::hayCampoPresente()
 void Stepper_28BYJ48::moverUnStep(bool sentidoHorario,int tamanoStep)
 {
   static int etapaActual = 1;
+  if(sentidoHorario)
+  {
+    _posicionMotorActual++;
+    if(_posicionMotorActual >= 2048)
+    {
+      _posicionMotorActual = 0;
+    }
+  }
+  else
+  {
+    _posicionMotorActual--;
+    if(_posicionMotorActual<0)
+    {
+      _posicionMotorActual = 2047;
+    }
+  }
+
   if(tamanoStep == FULL_STEP)
   {
     switch(etapaActual)
     {
       case 1:
+        //Serial.println("moverUnStep 1 ");
         etapaActual = sentidoHorario?2:4;
-        sentidoHorario?etapa2FullStep():etapa4FullStep();
+        etapa1FullStep();
+        //sentidoHorario?:etapa4FullStep();
       break;
       case 2:
+        //Serial.println("moverUnStep 2 ");  
         etapaActual = sentidoHorario?3:1;
-        sentidoHorario?etapa3FullStep():etapa1FullStep();
+        etapa2FullStep();
+        //sentidoHorario?etapa3FullStep():etapa1FullStep();
+        break;
       case 3:
+        //Serial.println("moverUnStep 3 ");
         etapaActual = sentidoHorario?4:2;
-        sentidoHorario?etapa4FullStep():etapa2FullStep();
+        etapa3FullStep();
+        //sentidoHorario?etapa4FullStep():etapa2FullStep();
       break;
       case 4:
-        etapaActual = sentidoHorario?4:2;
-        sentidoHorario?etapa1FullStep():etapa3FullStep();
+        //Serial.println("moverUnStep 4 ");
+        etapaActual = sentidoHorario?1:3;
+        etapa4FullStep();
+        //sentidoHorario?etapa1FullStep():etapa3FullStep();
       break;
       default:
+        //Serial.println("moverUnStep default ");
         etapaActual = 1;
         etapa1FullStep();
       break;
@@ -297,6 +331,7 @@ void Stepper_28BYJ48::moverUnStep(bool sentidoHorario,int tamanoStep)
       case 2:
         etapaActual = sentidoHorario?3:1;
         sentidoHorario?etapa3HalfStep():etapa1HalfStep();
+        break;
       case 3:
         etapaActual = sentidoHorario?4:2;
         sentidoHorario?etapa4HalfStep():etapa2HalfStep();
@@ -326,7 +361,6 @@ void Stepper_28BYJ48::moverUnStep(bool sentidoHorario,int tamanoStep)
       break;
     }
   }
-  delayPorStep();
 }
 
 void Stepper_28BYJ48::moverMotorHaciaPosicion(int posicionFinal, bool sentidoHorario)
@@ -334,5 +368,9 @@ void Stepper_28BYJ48::moverMotorHaciaPosicion(int posicionFinal, bool sentidoHor
   if(_posicionMotorActual != posicionFinal)
   {
     moverUnStep(sentidoHorario,FULL_STEP);
+  }
+  else
+  {
+    //Serial.println("posicion igual");
   }
 }

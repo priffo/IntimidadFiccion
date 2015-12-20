@@ -80,14 +80,15 @@ int z = 0;
 
 void loop()
 {
-  /*
+  
   for(int i=1;i<=13;i++)
-  {
+  {  
     _motor[nMotor(i)].moverMotorHaciaPosicion(2047,true);
   }
   _motor[1].delayPorStep();
-  */
   
+  
+  /*
   //Serial.println("loop");
   obtenerPosicionUsuario();
   //Serial.println("loop 1");
@@ -97,16 +98,18 @@ void loop()
       //Serial.println("loop 2");
     calcularPosiciones();
       //Serial.println("loop 3");
-    //moverMotores();
+    moverMotores();
       //Serial.println("loop 4");
     tiempoEspera = tiempoCorreccion - (micros() - tiempoEspera);
       //Serial.println("loop 5");
       String tiempoEsperaString = String (tiempoEspera);
       Serial.println("tiempoEspera = " + tiempoEsperaString);
       
-      delayMicroseconds(tiempoEspera);
+      //delayMicroseconds(tiempoEspera);
       //Serial.println("loop 6");
   }
+  */
+  /*
   if(z = 0)
   {
     
@@ -144,6 +147,7 @@ void loop()
   }
   z++;
   z = z % 4;
+  */
 }
 
 // Refresca la posicion del usuario
@@ -342,7 +346,9 @@ void moverMotores()
       _motor[nMotor(i)].moverMotorHaciaPosicion(registroPosicion[nMotor(i)][0],esSentidoHorario(i));
     }
     */
+    _motor[nMotor(i)].delayPorStep();
   }
+  
   
   
 }
@@ -419,7 +425,7 @@ void inicializarMotores()
   
   for(int i=1;i<=13;i++)
   {
-    //_motor[nMotor(13)].EncontrarCeroMotor(0);
+    _motor[nMotor(i)].EncontrarCeroMotor();
   }
 }
 
