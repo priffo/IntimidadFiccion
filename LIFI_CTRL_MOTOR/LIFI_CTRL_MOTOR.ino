@@ -10,6 +10,17 @@
 #define minPasosRadiales 10
 // Distancia entre radios equidistantes de un motor
 #define pasosSize 10
+// Numero de repeticiones de la correccion de la posicion de los
+// motores entre cada lectura de la posicion del usuario
+#define correccionesMotor 3
+// Define el step del buffer que es integrado para la posicion
+// futura del motor
+#define stepIntegracion 5
+// Factor de la distacia recorrida por el usuario para acentuar
+// o disminuir el efecto sobre el movimiento
+#define sensibilidadMovimiento 1.0
+// Tiempo de sincronizacion del ciclo de correccion de motores
+#define tiempoCorreccion 100000
 
 // Dark: agregar descripcion de esta instanciacion
 Stepper_28BYJ48 _motor[13];
@@ -17,11 +28,11 @@ Stepper_28BYJ48 _motor[13];
 // Registro de posicion de los motores:
 // - id del motor
 // - instante de tiempo (0= t-0, 1= t-1, 2= t-2)
-unsigned int registroPosicion[13][3];
+int registroPosicion[13][3];
 
 // Registro de la posicion del usuario
 // - instante de tiempo (0= t-0, 1= t-1)
-unsigned int posicionUsuario[2][2];
+float posicionUsuario[2][2];
 
 // Posiciones relativs de cada morot respecto al radar
 // - id del motor
@@ -41,8 +52,14 @@ void setup()
 
 void loop() {
   obtenerPosicionUsuario();
-  calcularPosiciones();
-  moverMotores();
+  for(int i=0; i<correccionesMotor; i++)
+  {
+    unsigned long tiempoEspera = micros();
+    calcularPosiciones();
+    moverMotores();
+    tiempoEspera = tiempoCorreccion - (micros() - tiempoEspera);
+    delay(tiempoEspera);
+  }
 }
 
 // Refresca la posicion del usuario
@@ -76,7 +93,7 @@ void calcularPosiciones()
   if(valid)
   {
     // procedimiento de calculo
-    int recorrido = distanciaRecorrida();
+    int recorrido = distanciaRecorrida()*sensibilidadMovimiento;
     for(int i=1; i<=13; i++)
     {
       int distanciaFinal = distanciaPuntoFinal(i);
@@ -103,6 +120,21 @@ void calcularPosiciones()
       bufferActivacion[i][j-1] = bufferActivacion[i][j];
     }
     bufferActivacion[i][maxPasosRadiales-1] = 0;
+  }
+  for(int i=0; i<13;  i++)
+  {
+    for(int j=1; j<3; j++)
+    {
+      registroPosicion[i][j-1] = registroPosicion[i][j];
+    }
+    registroPosicion[i][2] += bufferActivacion[i][stepIntegracion];
+    if(registroPosicion[i][2] > 2047)
+    {
+      registroPosicion[i][2] -= 2048;
+    }
+    if(registroPosicion[i][2] < 0){
+      registroPosicion[i][2] += 2048;
+    }
   }
 }
 
@@ -227,7 +259,7 @@ void inicializarArrays()
   }
 }
 
-// Iniciliza los motores para su uso
+// Inicializa los motores para su uso
 
 void inicializarMotores()
 {
