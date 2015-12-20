@@ -71,7 +71,7 @@ private:
 	int _pinFase4;
 	int _tamanoStep;
 
-	int _posicionMotor;
+	int _posicionMotorActual;
 
 	int _pinSensor;
 };

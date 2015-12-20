@@ -1,6 +1,6 @@
 #include "Arduino.h"
 #include "Stepper_28BYJ48.h"
-#define ANCHO_PULSO_FULL_STEP  3000
+#define ANCHO_PULSO_FULL_STEP  2000
 #define ANCHO_PULSO_HALF_STEP  1000
 #define MOTOR_POSICION_MAXIMA  256
 #define MOTOR_POSICION_MINIMA  -1*MOTOR_POSICION_MAXIMA + 1
@@ -18,7 +18,7 @@ Stepper_28BYJ48::Stepper_28BYJ48(int PIN_FASE1,int PIN_FASE2,int PIN_FASE3,int P
 
 void Stepper_28BYJ48::Inicializar(int PIN_FASE1,int PIN_FASE2,int PIN_FASE3,int PIN_FASE4,int tamanoStep, int pinSensor)
 {
-  _posicionMotor = 0;
+  _posicionMotorActual = 0;
   _tamanoStep = tamanoStep;
   _pinFase1 = PIN_FASE1;
   _pinFase2 = PIN_FASE2;
@@ -90,13 +90,23 @@ void Stepper_28BYJ48::apagarMotor()
 
 void Stepper_28BYJ48::irAPosicion(int posicion)
 {
-  if(posicion > _posicionMotor)
+  int diferencia = _posicionMotorActual - posicion;
+  if(diferencia < 0)
   {
-    moverMotor(_posicionMotor - posicion,true);
+    moverMotor(diferencia,true);
   }
-  else if(posicion < _posicionMotor)
+  else if (diferencia > 0)
   {
-    moverMotor(_posicionMotor - posicion,false);
+    if(diferencia > 1024 )
+    moverMotor(diferencia,false);
+  }
+  if(posicion > _posicionMotorActual )
+  {
+    moverMotor(_posicionMotorActual - posicion,true);
+  }
+  else if(posicion < _posicionMotorActual)
+  {
+    moverMotor(_posicionMotorActual - posicion,false);
   }
 }
 
@@ -105,85 +115,35 @@ void Stepper_28BYJ48::moverMotor(int nSteps,bool sentidoHorario)
 
   for(int i = 0; i < abs(nSteps) ; i++)
   {
-
-    moverMotorUnStep(sentidoHorario);
-    sentidoHorario?_posicionMotor++:_posicionMotor--;
-  }
-}
-
-void Stepper_28BYJ48::moverMotorUnStep(bool sentidoHorario)
-{
-  if(_tamanoStep == FULL_STEP)
-  {
+    moverUnStep(sentidoHorario,FULL_STEP);
     if(sentidoHorario)
     {
-      etapa1FullStep();
-      delayPorStep();
-      etapa2FullStep();
-      delayPorStep();
-      etapa3FullStep();
-      delayPorStep();
-      etapa4FullStep();
-      delayPorStep();
+      if(_posicionMotorActual == 2047)
+      {
+        _posicionMotorActual = 0;
+      }
+      else
+      {
+        _posicionMotorActual++;
+      }
     }
     else
     {
-      etapa4FullStep();
-      delayPorStep();
-      etapa3FullStep();
-      delayPorStep();
-      etapa2FullStep();
-      delayPorStep();
-      etapa1FullStep();
-      delayPorStep();
-    }
-  }
-
-  if(_tamanoStep == HALF_STEP)
-  {
-    if(sentidoHorario)
-    {
-      etapa1HalfStep();
-      delayPorStep();
-      etapa2HalfStep();
-      delayPorStep();
-      etapa3HalfStep();
-      delayPorStep();
-      etapa4HalfStep();
-      delayPorStep();
-      etapa5HalfStep();
-      delayPorStep();
-      etapa6HalfStep();
-      delayPorStep();
-      etapa7HalfStep();
-      delayPorStep();
-      etapa8HalfStep();
-      delayPorStep();
-    }
-    else
-    {
-      etapa8HalfStep();
-      delayPorStep();
-      etapa7HalfStep();
-      delayPorStep();
-      etapa6HalfStep();
-      delayPorStep();
-      etapa5HalfStep();
-      delayPorStep();
-      etapa4HalfStep();
-      delayPorStep();
-      etapa3HalfStep();
-      delayPorStep();
-      etapa2HalfStep();
-      delayPorStep();
-      etapa1HalfStep();
-      delayPorStep();
+      if(_posicionMotorActual == 0)
+      {
+        _posicionMotorActual = 2047;
+      }
+      else
+      {
+        _posicionMotorActual--;
+      }
     }
   }
 }
+
 void Stepper_28BYJ48::resetPosicion()
 {
-  _posicionMotor = 0;
+  _posicionMotorActual = 0;
 }
 
 void Stepper_28BYJ48::etapa1FullStep()
@@ -366,11 +326,12 @@ void Stepper_28BYJ48::moverUnStep(bool sentidoHorario,int tamanoStep)
       break;
     }
   }
+  delayPorStep();
 }
 
 void Stepper_28BYJ48::moverMotorHaciaPosicion(int posicionFinal, bool sentidoHorario)
 {
-  if(_posicionMotor != posicionFinal)
+  if(_posicionMotorActual != posicionFinal)
   {
     moverUnStep(sentidoHorario,FULL_STEP);
   }

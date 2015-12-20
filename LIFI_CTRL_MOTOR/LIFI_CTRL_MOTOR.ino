@@ -1,5 +1,6 @@
 #include "Arduino.h"
 #include <Stepper_28BYJ48.h>
+#include <EasyTransfer.h>
 
 #define nMotor(n)  (n-1)
 
@@ -45,8 +46,25 @@ int posicionRelativaMotores[13][2];
 // - distancia radial en steps de la activacion futura
 int bufferActivacion[13][maxPasosRadiales];
 
+struct SEND_DATA_STRUCTURE{
+  //put your variable definitions here for the data you want to send
+  //THIS MUST BE EXACTLY THE SAME ON THE OTHER ARDUINO
+  float angulo;
+  float distancia;
+};
+
+//give a name to the group of data
+SEND_DATA_STRUCTURE mydata;
+
+//create object
+EasyTransfer ET;
+
 void setup()
 {
+  Serial.begin(9600);
+  //start the library, pass in the data details and the name of the serial port. Can be Serial, Serial1, Serial2, etc.
+  ET.begin(details(mydata), &Serial);
+
   inicializarArrays();
   inicializarMotores();
 }
@@ -70,8 +88,14 @@ void obtenerPosicionUsuario()
 {
   posicionUsuario[1][0] = posicionUsuario[0][0];
   posicionUsuario[1][1] = posicionUsuario[0][1];
-  posicionUsuario[0][0] = 0; // Dark: completar con theta del radar
-  posicionUsuario[0][1] = 0; // Dark: completar con distancia del radar
+
+  while(!ET.receiveData())
+  {
+    //this is how you access the variables. [name of the group].[variable name]
+    //since we have data, we will blink it out. 
+    posicionUsuario[0][0] = mydata.angulo; // Dark: completar con theta del radar
+    posicionUsuario[0][1] = mydata.distancia; // Dark: completar con distancia del radar
+  }
 }
 
 // Calcula las nuevas posiciones de los motores
