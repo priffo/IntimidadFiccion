@@ -1,7 +1,7 @@
 #include "Arduino.h"
 #include <Stepper_28BYJ48.h>
 
-#define nMotor(n)  n-1
+#define nMotor(n)  (n-1)
 
 // Define la cantidad de pasos a considerar radialmente
 // para el buffer de un motor
@@ -22,7 +22,8 @@
 // Tiempo de sincronizacion del ciclo de correccion de motores
 #define tiempoCorreccion 100000
 
-// Dark: agregar descripcion de esta instanciacion
+//Corresponde a todos los motores controlador por un cada 
+//arduino mega 2560, pueden ser hasta 13.
 Stepper_28BYJ48 _motor[13];
 
 // Registro de posicion de los motores:
@@ -50,7 +51,8 @@ void setup()
   inicializarMotores();
 }
 
-void loop() {
+void loop()
+{
   obtenerPosicionUsuario();
   for(int i=0; i<correccionesMotor; i++)
   {
@@ -200,7 +202,7 @@ void moverMotores()
   */
   for(int i=1;i<=13;i++)
   {
-    if(esMovimientoValido)
+    if(esMovimientoValido(i))
     {
       _motor[nMotor(i)].moverMotorHaciaPosicion(registroPosicion[nMotor(i)][0],esSentidoHorario(i));
     }
@@ -278,7 +280,10 @@ void inicializarMotores()
   _motor[nMotor(13)].Inicializar(50,48,46,44,FULL_STEP,52);
 }
 
-// Dark: Agregar descripcion de esta funcion
+//Verifica que el movimiento que va a realizar sea un movimiento válido,
+//Si el movimiento de T-1 con respecto a T-2 es en una dirección, el movimiento de T-1 y T0
+//debe ser en la misma dirección, de lo contrario retorna falso.
+//- idMotor, motor para el cual se realiza el cálculo
 
 bool esMovimientoValido(int idMotor)
 {
@@ -292,7 +297,8 @@ bool esMovimientoValido(int idMotor)
   return false;
 }
 
-// Dark: agregar descripcion de esta funcion
+//Determina el sentido de giro para un motor
+// - idMotor, motor para el cual se realiza el cálculo
 
 bool esSentidoHorario(int idMotor)
 {
