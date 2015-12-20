@@ -23,6 +23,8 @@
 // Tiempo de sincronizacion del ciclo de correccion de motores
 #define tiempoCorreccion 100000
 
+bool acercando; // Dark: to delete
+
 //Corresponde a todos los motores controlador por un cada 
 //arduino mega 2560, pueden ser hasta 13.
 Stepper_28BYJ48 _motor[13];
