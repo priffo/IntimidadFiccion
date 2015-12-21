@@ -4,6 +4,9 @@
 
 #define nMotor(n) (n-1)
 
+// Define el ID del arduino en uso para calcular las posiciones
+// de los motores
+#define arduinoID 1
 // Define la cantidad de pasos a considerar radialmente
 // para el buffer de un motor
 #define maxPasosRadiales 20
@@ -234,32 +237,123 @@ void moverMotores()
 void inicializarArrays()
 {
   // Carga las posiciones relativas de los motores respecto al radar
-  posicionRelativaMotores[nMotor(1)][0]  =  21;
-  posicionRelativaMotores[nMotor(1)][1]  = -18;
-  posicionRelativaMotores[nMotor(2)][0]  =   9;
-  posicionRelativaMotores[nMotor(2)][1]  = -24;
-  posicionRelativaMotores[nMotor(3)][0]  =  -2;
-  posicionRelativaMotores[nMotor(3)][1]  = -30;
-  posicionRelativaMotores[nMotor(4)][0]  = -13;
-  posicionRelativaMotores[nMotor(4)][1]  = -37;
-  posicionRelativaMotores[nMotor(5)][0]  = -24;
-  posicionRelativaMotores[nMotor(5)][1]  = -44;
-  posicionRelativaMotores[nMotor(6)][0]  = -39;
-  posicionRelativaMotores[nMotor(6)][1]  = -51;
-  posicionRelativaMotores[nMotor(7)][0]  =  22;
-  posicionRelativaMotores[nMotor(7)][1]  = -31;
-  posicionRelativaMotores[nMotor(8)][0]  =  10;
-  posicionRelativaMotores[nMotor(8)][1]  = -38;
-  posicionRelativaMotores[nMotor(9)][0]  =  -2;
-  posicionRelativaMotores[nMotor(9)][1]  = -44;
-  posicionRelativaMotores[nMotor(10)][0] = -14;
-  posicionRelativaMotores[nMotor(10)][1] = -50;
-  posicionRelativaMotores[nMotor(11)][0] = -23;
-  posicionRelativaMotores[nMotor(11)][1] = -57;
-  posicionRelativaMotores[nMotor(12)][0] = -33;
-  posicionRelativaMotores[nMotor(12)][1] = -65;
-  posicionRelativaMotores[nMotor(13)][0] =   0; // Legacy
-  posicionRelativaMotores[nMotor(13)][1] =   0; // Legacy
+  for(int i=1;i<=13;i++)
+  {
+    posicionRelativaMotores[nMotor(i)][0] = 0;
+    posicionRelativaMotores[nMotor(i)][1] = 0;
+  }
+  // Arduino I
+  if(arduinoID == 1)
+  {
+    posicionRelativaMotores[nMotor(1)][0]  = -27;
+    posicionRelativaMotores[nMotor(1)][1]  = -31;
+    posicionRelativaMotores[nMotor(2)][0]  = -27;
+    posicionRelativaMotores[nMotor(2)][1]  = -18;
+    posicionRelativaMotores[nMotor(3)][0]  = -27;
+    posicionRelativaMotores[nMotor(3)][1]  =  -5;
+    posicionRelativaMotores[nMotor(4)][0]  = -26;
+    posicionRelativaMotores[nMotor(4)][1]  =   9;
+    posicionRelativaMotores[nMotor(5)][0]  = -27;
+    posicionRelativaMotores[nMotor(5)][1]  =  20;
+    posicionRelativaMotores[nMotor(6)][0]  = -39;
+    posicionRelativaMotores[nMotor(6)][1]  = -38;
+    posicionRelativaMotores[nMotor(7)][0]  = -39;
+    posicionRelativaMotores[nMotor(7)][1]  = -25;
+    posicionRelativaMotores[nMotor(8)][0]  = -39;
+    posicionRelativaMotores[nMotor(8)][1]  = -13;
+    posicionRelativaMotores[nMotor(9)][0]  = -39;
+    posicionRelativaMotores[nMotor(9)][1]  =   1;
+    posicionRelativaMotores[nMotor(10)][0] = -39;
+    posicionRelativaMotores[nMotor(10)][1] =  14;
+    posicionRelativaMotores[nMotor(11)][0] = -38;
+    posicionRelativaMotores[nMotor(11)][1] =  28;
+    posicionRelativaMotores[nMotor(12)][0] = -39;
+    posicionRelativaMotores[nMotor(12)][1] =  40;
+  }
+  // Arduino II
+  if(arduinoID == 2)
+  {
+    posicionRelativaMotores[nMotor(1)][0]  =  21;
+    posicionRelativaMotores[nMotor(1)][1]  = -18;
+    posicionRelativaMotores[nMotor(2)][0]  =   9;
+    posicionRelativaMotores[nMotor(2)][1]  = -24;
+    posicionRelativaMotores[nMotor(3)][0]  =  -2;
+    posicionRelativaMotores[nMotor(3)][1]  = -30;
+    posicionRelativaMotores[nMotor(4)][0]  = -13;
+    posicionRelativaMotores[nMotor(4)][1]  = -37;
+    posicionRelativaMotores[nMotor(5)][0]  = -24;
+    posicionRelativaMotores[nMotor(5)][1]  = -44;
+    posicionRelativaMotores[nMotor(6)][0]  = -39;
+    posicionRelativaMotores[nMotor(6)][1]  = -51;
+    posicionRelativaMotores[nMotor(7)][0]  =  22;
+    posicionRelativaMotores[nMotor(7)][1]  = -31;
+    posicionRelativaMotores[nMotor(8)][0]  =  10;
+    posicionRelativaMotores[nMotor(8)][1]  = -38;
+    posicionRelativaMotores[nMotor(9)][0]  =  -2;
+    posicionRelativaMotores[nMotor(9)][1]  = -44;
+    posicionRelativaMotores[nMotor(10)][0] = -14;
+    posicionRelativaMotores[nMotor(10)][1] = -50;
+    posicionRelativaMotores[nMotor(11)][0] = -23;
+    posicionRelativaMotores[nMotor(11)][1] = -57;
+    posicionRelativaMotores[nMotor(12)][0] = -33;
+    posicionRelativaMotores[nMotor(12)][1] = -65;
+  }
+  // Arduino III
+  if(arduinoID == 3)
+  {
+    posicionRelativaMotores[nMotor(1)][0]  =  21;
+    posicionRelativaMotores[nMotor(1)][1]  =  18;
+    posicionRelativaMotores[nMotor(2)][0]  =  33;
+    posicionRelativaMotores[nMotor(2)][1]  =  12;
+    posicionRelativaMotores[nMotor(4)][0]  =  43;
+    posicionRelativaMotores[nMotor(4)][1]  =   5;
+    posicionRelativaMotores[nMotor(5)][0]  =  32;
+    posicionRelativaMotores[nMotor(5)][1]  = -12;
+    posicionRelativaMotores[nMotor(6)][0]  =  32;
+    posicionRelativaMotores[nMotor(6)][1]  =  26;
+    posicionRelativaMotores[nMotor(7)][0]  =  44;
+    posicionRelativaMotores[nMotor(7)][1]  =  19;
+    posicionRelativaMotores[nMotor(8)][0]  =  55;
+    posicionRelativaMotores[nMotor(8)][1]  =  11;
+    posicionRelativaMotores[nMotor(9)][0]  =  66;
+    posicionRelativaMotores[nMotor(9)][1]  =   5;
+    posicionRelativaMotores[nMotor(10)][0] =  66;
+    posicionRelativaMotores[nMotor(10)][1] =  -8;
+    posicionRelativaMotores[nMotor(11)][0] =  55;
+    posicionRelativaMotores[nMotor(11)][1] = -13;
+    posicionRelativaMotores[nMotor(12)][0] =  45;
+    posicionRelativaMotores[nMotor(12)][1] = -18;
+    posicionRelativaMotores[nMotor(13)][0] =  33;
+    posicionRelativaMotores[nMotor(13)][1] = -25;
+  }
+  // Arduino IV
+  if(arduinoID == 4)
+  {
+    posicionRelativaMotores[nMotor(1)][0]  = -38;
+    posicionRelativaMotores[nMotor(1)][1]  =  54;
+    posicionRelativaMotores[nMotor(2)][0]  = -23;
+    posicionRelativaMotores[nMotor(2)][1]  =  44;
+    posicionRelativaMotores[nMotor(3)][0]  = -27;
+    posicionRelativaMotores[nMotor(3)][1]  =  34;
+    posicionRelativaMotores[nMotor(4)][0]  = -12;
+    posicionRelativaMotores[nMotor(4)][1]  =  37;
+    posicionRelativaMotores[nMotor(5)][0]  =  -1;
+    posicionRelativaMotores[nMotor(5)][1]  =  31;
+    posicionRelativaMotores[nMotor(6)][0]  =  15;
+    posicionRelativaMotores[nMotor(6)][1]  =  22;
+    posicionRelativaMotores[nMotor(7)][0]  = -34;
+    posicionRelativaMotores[nMotor(7)][1]  =  64;
+    posicionRelativaMotores[nMotor(8)][0]  = -23;
+    posicionRelativaMotores[nMotor(8)][1]  =  58;
+    posicionRelativaMotores[nMotor(9)][0]  = -11;
+    posicionRelativaMotores[nMotor(9)][1]  =  51;
+    posicionRelativaMotores[nMotor(10)][0] =  -1;
+    posicionRelativaMotores[nMotor(10)][1] =  45;
+    posicionRelativaMotores[nMotor(11)][0] =   9;
+    posicionRelativaMotores[nMotor(11)][1] =  39;
+    posicionRelativaMotores[nMotor(12)][0] =  21;
+    posicionRelativaMotores[nMotor(12)][1] =  32;
+  }
   // Inicializa la posicion del usuario
   posicionUsuario[0][0] = 0;
   posicionUsuario[0][1] = 0;
@@ -298,10 +392,10 @@ void inicializarMotores()
   //}
 }
 
-//Verifica que el movimiento que va a realizar sea un movimiento válido,
-//Si el movimiento de T-1 con respecto a T-2 es en una dirección, el movimiento de T-1 y T0
-//debe ser en la misma dirección, de lo contrario retorna falso.
-//- idMotor, motor para el cual se realiza el cálculo
+//Verifica que el movimiento que va a realizar sea un movimiento valido
+//Si el movimiento de t-1 con respecto a t-2 es en una direccion, el movimiento de t-1 y t-0
+// debe ser en la misma direccion, de lo contrario retorna falso
+// - idMotor motor para el cual se realiza el calculo
 
 bool esMovimientoValido(int idMotor)
 {
@@ -316,7 +410,7 @@ bool esMovimientoValido(int idMotor)
 }
 
 //Determina el sentido de giro para un motor
-// - idMotor, motor para el cual se realiza el cálculo
+// - idMotor id del motor para el cual se realiza el calculo
 
 bool esSentidoHorario(int idMotor)
 {
