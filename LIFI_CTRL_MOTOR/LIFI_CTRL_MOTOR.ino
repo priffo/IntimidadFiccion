@@ -2,7 +2,7 @@
 #include <Stepper_28BYJ48.h>
 #include <EasyTransfer.h>
 
-#define nMotor(n)  (n-1)
+#define nMotor(n) (n-1)
 
 // Define la cantidad de pasos a considerar radialmente
 // para el buffer de un motor
@@ -50,6 +50,8 @@ SEND_DATA_STRUCTURE mydata;
 EasyTransfer ET;
 // Contador global para el ciclo interno de movimiento de motor
 int globalCounter = 0;
+// Velocidades de rotacion
+double velocidad[13];
 
 bool acercando; // Dark: to delete
 
@@ -71,7 +73,7 @@ void loop()
   }
   moverMotores();
   globalCounter++;
-  globalCounter=globalCounter % stepsPorCiclo;
+  globalCounter = globalCounter % stepsPorCiclo;
   delayMicroseconds(1500);
 }
 
@@ -89,16 +91,16 @@ void obtenerPosicionUsuario()
   posicionUsuario[0][0] = 0;
   if(acercando)
   {
-    posicionUsuario[0][1] = posicionUsuario[0][1] + 10;
-    if(posicionUsuario[0][1] >= 135)
+    posicionUsuario[0][1] = posicionUsuario[0][1] + 17;
+    if(posicionUsuario[0][1] >= 200)
     {
       acercando = false;
     }
   }
   else
   {
-    posicionUsuario[0][1] = posicionUsuario[0][1] - 10;
-    if(posicionUsuario[0][1] <= 105)
+    posicionUsuario[0][1] = posicionUsuario[0][1] - 17;
+    if(posicionUsuario[0][1] <= 100)
     {
       acercando = true;
     }
@@ -118,14 +120,14 @@ void calcularPosiciones()
   int recorrido = distanciaRecorrida()*sensibilidadMovimiento;
   for(int i=1;i<=13;i++)
   {
-    int distanciaFinal = distanciaPuntoFinal(nMotor(i));
-    double variacionAngular = traslacionAngular(nMotor(i));
+    int distanciaFinal = distanciaPuntoFinal(i);
+    double variacionAngular = traslacionAngular(i);
     int affectedStep = distanciaFinal / pasosSize;
     if(affectedStep < minPasosRadiales || affectedStep > maxPasosRadiales - 1)
     {
       // fuera de rango re respuesta
     } else {
-      int movimiento = (variacionAngular > 0) ? 1 : -1; 
+      int movimiento = (variacionAngular > 0) ? -1 : 1; 
       movimiento *= recorrido;
       bufferActivacion[nMotor(i)][affectedStep] += movimiento;
     }
@@ -139,15 +141,30 @@ void calcularPosiciones()
   {
     for(int j=2;j>0;j--)
     {
-      registroPosicion[nMotor(i)][j] = registroPosicion[i][j-1];
+      registroPosicion[nMotor(i)][j] = registroPosicion[nMotor(i)][j-1];
     }
-    registroPosicion[nMotor(i)][0] += bufferActivacion[nMotor(i)][stepIntegracion];
+    registroPosicion[nMotor(i)][0] += bufferActivacion[nMotor(i)][stepIntegracion-0];
+    registroPosicion[nMotor(i)][0] += bufferActivacion[nMotor(i)][stepIntegracion-1];
+    registroPosicion[nMotor(i)][0] += bufferActivacion[nMotor(i)][stepIntegracion-2];
+    registroPosicion[nMotor(i)][0] += bufferActivacion[nMotor(i)][stepIntegracion-3];
+    registroPosicion[nMotor(i)][0] += bufferActivacion[nMotor(i)][stepIntegracion-4];
+    registroPosicion[nMotor(i)][0] += bufferActivacion[nMotor(i)][stepIntegracion-5];
     if(registroPosicion[nMotor(i)][0] > 2047)
     {
       registroPosicion[nMotor(i)][0] -= 2048;
     }
     if(registroPosicion[nMotor(i)][0] < 0){
       registroPosicion[nMotor(i)][0] += 2048;
+    }
+    int nStep = calcularSteps(registroPosicion[nMotor(i)][0], registroPosicion[nMotor(i)][1]);
+    if(nStep != 0)
+    {
+      velocidad[nMotor(i)] = (double)stepsPorCiclo;
+      velocidad[nMotor(i)] /= (double) abs(nStep);
+    }
+    else
+    {
+      velocidad[nMotor(i)] = stepsPorCiclo;
     }
   }
 }
@@ -189,38 +206,20 @@ double traslacionAngular(int idMotor)
 // Mueve los motores a la ultima ubicacion calculada en el ciclo
 void moverMotores()
 {
-  //for(int i=1;i<=13;i++)
-  for(int i=4;i<=4;i++)
+  for(int i=1;i<=13;i++)
   {
-    double velocidad;
-    int nStep = calcularSteps(registroPosicion[nMotor(i)][0], registroPosicion[nMotor(i)][1]);
-    if(nStep != 0)
-    {
-      velocidad = (double)stepsPorCiclo / (double) abs(nStep);
-    }
-    else
-    {
-      velocidad = stepsPorCiclo;
-    }
-    if((int)contadorCiclo[i] == globalCounter)
+    if((int)contadorCiclo[nMotor(i)] == globalCounter)
     {
        _motor[nMotor(i)].moverMotorHaciaPosicion(registroPosicion[nMotor(i)][0],esSentidoHorario(i));
-       contadorCiclo[i] += velocidad;
+       contadorCiclo[nMotor(i)] += velocidad[nMotor(i)];
     }
   }
-  _motor[nMotor(0)].delayPorStep();
 }
 
 // Inicializa los arrays para comunicacion de estados
 
 void inicializarArrays()
 {
-  // Setea la posicion relativa de los motores a 0
-  for (int i=1;i<=13;i++) {
-    for (int j=0;j<3;j++) {
-      posicionRelativaMotores[nMotor(i)][j] = 0;
-    }
-  }
   // Carga las posiciones relativas de los motores respecto al radar
   posicionRelativaMotores[nMotor(1)][0]  =  21;
   posicionRelativaMotores[nMotor(1)][1]  = -18;
@@ -248,10 +247,6 @@ void inicializarArrays()
   posicionRelativaMotores[nMotor(12)][1] = -65;
   posicionRelativaMotores[nMotor(13)][0] =   0; // Legacy
   posicionRelativaMotores[nMotor(13)][1] =   0; // Legacy
-  for(int i=1;i<=13;i++){ // Lothar: forzando comportamiento identico de todos los motores
-    posicionRelativaMotores[nMotor(i)][0]  = -13;
-    posicionRelativaMotores[nMotor(i)][1]  = -37;
-  }
   // Inicializa la posicion del usuario
   posicionUsuario[0][0] = 0;
   posicionUsuario[0][1] = 0;
