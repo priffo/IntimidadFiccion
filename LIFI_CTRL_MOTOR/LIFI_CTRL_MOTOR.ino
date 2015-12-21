@@ -23,11 +23,15 @@
 // Tiempo de sincronizacion del ciclo de correccion de motores
 #define tiempoCorreccion 1000000
 
+#define stepsPorCiclo           512
+
 bool acercando; // Dark: to delete
 
 //Corresponde a todos los motores controlador por un cada 
 //arduino mega 2560, pueden ser hasta 13.
 Stepper_28BYJ48 _motor[13];
+
+double contadorCiclo[13];
 
 // Registro de posicion de los motores:
 // - id del motor
@@ -74,11 +78,10 @@ void setup()
   acercando = true;
   posicionUsuario[0][1] = 105;
   ////Serial.println("fin setup");
-  delay(5000);
+  delay(1000);
   Serial.println("init ready");
 }
 
-int z = 0;
 int globalCounter = 0;
 void loop()
 {
@@ -90,7 +93,7 @@ void loop()
   // _motor[1].delayPorStep();
   
   //Serial.println("loop");
-  if(globalCounter++==0){
+  if(globalCounter==0){
   obtenerPosicionUsuario();
   //Serial.println("loop 1");
   for(int i=0; i<correccionesMotor; i++)
@@ -109,9 +112,10 @@ void loop()
       //Serial.println("loop 6");
   }
   }
-  globalCounter=globalCounter % 512;
+  globalCounter=globalCounter % stepsPorCiclo;
   moverMotores();
   delay(2);
+  globalCounter++;
   
   /*
   if(z = 0)
@@ -183,6 +187,11 @@ void obtenerPosicionUsuario()
   
   String theta = String(posicionUsuario[0][0]);
   String distancia = String(posicionUsuario[0][1]);
+  
+  for(int i=0; i<13; i++)
+  {
+    contadorCiclo[i] = 0;
+  }
   //Serial.println("Pos = (" + theta + "," + distancia + ")");
 
 /*
@@ -327,46 +336,48 @@ double traslacionAngular(int idMotor)
 }
 
 // Mueve los motores a la ultima ubicacion calculada en el ciclo
-
 void moverMotores()
 {
-  /*
-  for(int i=1;i<=13;i++)
+  for(int i=4;i<=4;i++)
   {
-      _motor[nMotor(i)].etapa1FullStep();
-  }
-  _motor[0].delayPorStep();
-  for(int i=1;i<=13;i++)
-  {
-      _motor[nMotor(i)].etapa2FullStep();
-  }
-  _motor[0].delayPorStep();
-  for(int i=1;i<=13;i++)
-  {
-      _motor[nMotor(i)].etapa3FullStep();
-  }
-  _motor[0].delayPorStep();
-  for(int i=1;i<=13;i++)
-  {
-      _motor[nMotor(i)].etapa4FullStep();
-  }
-  _motor[0].delayPorStep();
-  
-  */
-  for(int i=1;i<=13;i++)
-  {
-    if (i == 4){
-    //String posicion = String(registroPosicion[nMotor(i)][0]);
-    //Serial.println("posicion = "+ posicion);
-    _motor[nMotor(i)].moverMotorHaciaPosicion(registroPosicion[nMotor(i)][0],esSentidoHorario(i));
-    /*
-    if(esMovimientoValido(i))
-    {
-      
-      _motor[nMotor(i)].moverMotorHaciaPosicion(registroPosicion[nMotor(i)][0],esSentidoHorario(i));
-    }
-    */}
+    double velocidad;
+    int nStep = calcularSteps(registroPosicion[nMotor(i)][0],registroPosicion[nMotor(i)][1]);
+    String nStepString = String(nStep);
     
+    Serial.println("nStepString = "+ nStepString);
+    
+    if(nStep != 0)
+    {
+      velocidad = stepsPorCiclo/abs(nStep);
+    }
+    else
+    {
+      velocidad = stepsPorCiclo;
+    }
+    /*
+    String velocidadString = String(velocidad);
+    Serial.println("velocidadString = "+ velocidadString);
+    */
+    /*
+    String globalCounterString = String(globalCounter);
+    Serial.println("globalCounterString = "+ globalCounterString);
+    */
+    String globalCounterString = String(globalCounter);
+    String contadorCicloString = String(contadorCiclo[i]);
+    
+    Serial.println("globalCounterString = "+ globalCounterString + "  contadorCiclo = " +contadorCicloString);
+    if((int)contadorCiclo[i] == globalCounter)
+    {
+        _motor[nMotor(i)].moverMotorHaciaPosicion(registroPosicion[nMotor(i)][0],esSentidoHorario(i));
+        contadorCiclo[i]+= velocidad;
+      /*
+      if(esMovimientoValido(i))
+      {
+        
+        _motor[nMotor(i)].moverMotorHaciaPosicion(registroPosicion[nMotor(i)][0],esSentidoHorario(i));
+      }
+      */
+    }
   }
   _motor[nMotor(0)].delayPorStep();
 }
@@ -469,6 +480,7 @@ bool esMovimientoValido(int idMotor)
 
 bool esSentidoHorario(int idMotor)
 {
+  //Lothar usar calcularSteps
   bool toReturn = false;
   int sentidoStep = registroPosicion[nMotor(idMotor)][0] - registroPosicion[nMotor(idMotor)][1];
   if(sentidoStep < 0)
@@ -480,10 +492,21 @@ bool esSentidoHorario(int idMotor)
   if(abs(sentidoStep) > 1000){
     toReturn = !toReturn;
   }
-  //if (globalCounter == 0 && nMotor(idMotor) == 4){
-  //  String toPrint = (toReturn)? "derecha" : "izquierda";
-  //  String sentidoStepString = String(sentidoStep);
-  //  Serial.println("sentido = "+ toPrint + " - " + sentidoStepString);
-  //}
   return toReturn;
+}
+
+int calcularSteps(int posicionFinal,int posicionInicial)
+{
+  int sentidoStep = posicionFinal - posicionInicial;
+  
+  if(sentidoStep > 1000)
+  {
+    sentidoStep-=2048;
+  }
+  else if (sentidoStep < -1000)
+  {
+    sentidoStep+=2048;
+  }
+
+  return sentidoStep;
 }
