@@ -39,21 +39,21 @@ int posicionRelativaMotores[13][2];
 // - id del motor
 // - distancia radial en steps de la activacion futura
 int bufferActivacion[13][maxPasosRadiales];
+
+EasyTransfer ET;
 // Estructura para el dato del radar
-struct SEND_DATA_STRUCTURE{
+struct RECEIVE_DATA_STRUCTURE{
   float angulo;
-  float distanciaCM;
+  int distanciaCM;
 };
 // Dato del radar
-SEND_DATA_STRUCTURE mydata;
+RECEIVE_DATA_STRUCTURE mydata;
 // Objeto para la validacion de los datos del radar
-EasyTransfer ET;
+
 // Contador global para el ciclo interno de movimiento de motor
 int globalCounter = 0;
 // Velocidades de rotacion
 double velocidad[13];
-
-bool acercando; // Dark: to delete
 
 void setup()
 {
@@ -61,8 +61,9 @@ void setup()
   ET.begin(details(mydata), &Serial);
   inicializarArrays();
   inicializarMotores();
-  acercando = true;            // Simulacion del radar
-  posicionUsuario[0][1] = 105; // Simulacion del radar
+  //acercando = true;            // Simulacion del radar
+  //posicionUsuario[0][1] = 105; // Simulacion del radar
+  //Serial.println("Iniciado");
 }
 
 void loop()
@@ -76,6 +77,7 @@ void loop()
   globalCounter++;
   globalCounter = globalCounter % stepsPorCiclo;
   delayMicroseconds(1500);
+  
 }
 
 // Refresca la posicion del usuario
@@ -84,20 +86,20 @@ void obtenerPosicionUsuario()
 {
   posicionUsuario[1][0] = posicionUsuario[0][0];
   posicionUsuario[1][1] = posicionUsuario[0][1];
+  
   if(ET.receiveData())
   {
-    Serial.println("data rx");
-    posicionUsuario[0][0] = mydata.angulo; // Dark: completar con theta del radar
-    posicionUsuario[0][1] = mydata.distanciaCM; // Dark: completar con distancia del radar
-  }
-  else
-  {
-    Serial.println(":(");
-  }
+    String anguloString = String(mydata.angulo);
+    String distanciaString = String(mydata.distanciaCM);
+    Serial.println("angulo = " + anguloString + " distancia = " + distanciaString);
+    posicionUsuario[0][0] = mydata.angulo;
+    posicionUsuario[0][1] = mydata.distanciaCM;
+  } 
   
+  /*
   ////////////////////////////////////////////////////////////
   // Simulador de radar
-  /*
+  
   posicionUsuario[0][0] = 0;
   if(acercando)
   {
@@ -115,9 +117,9 @@ void obtenerPosicionUsuario()
       acercando = true;
     }
   }
-  */
-  ////////////////////////////////////////////////////////////
   
+  ////////////////////////////////////////////////////////////
+  */
   for(int i=1; i<=13; i++)
   {
     contadorCiclo[nMotor(i)] = 0;
