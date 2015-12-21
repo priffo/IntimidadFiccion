@@ -42,7 +42,7 @@ int bufferActivacion[13][maxPasosRadiales];
 // Estructura para el dato del radar
 struct SEND_DATA_STRUCTURE{
   float angulo;
-  float distancia;
+  float distanciaCM;
 };
 // Dato del radar
 SEND_DATA_STRUCTURE mydata;
@@ -58,6 +58,7 @@ bool acercando; // Dark: to delete
 void setup()
 {
   Serial.begin(9600); // Comunicacion serial
+  ET.begin(details(mydata), &Serial);
   inicializarArrays();
   inicializarMotores();
   acercando = true;            // Simulacion del radar
@@ -83,11 +84,20 @@ void obtenerPosicionUsuario()
 {
   posicionUsuario[1][0] = posicionUsuario[0][0];
   posicionUsuario[1][1] = posicionUsuario[0][1];
-  //posicionUsuario[0][0] = 0; // Dark: completar con theta del radar
-  //posicionUsuario[0][1] = 0; // Dark: completar con distancia del radar
+  if(ET.receiveData())
+  {
+    Serial.println("data rx");
+    posicionUsuario[0][0] = mydata.angulo; // Dark: completar con theta del radar
+    posicionUsuario[0][1] = mydata.distanciaCM; // Dark: completar con distancia del radar
+  }
+  else
+  {
+    Serial.println(":(");
+  }
   
   ////////////////////////////////////////////////////////////
   // Simulador de radar
+  /*
   posicionUsuario[0][0] = 0;
   if(acercando)
   {
@@ -105,6 +115,7 @@ void obtenerPosicionUsuario()
       acercando = true;
     }
   }
+  */
   ////////////////////////////////////////////////////////////
   
   for(int i=1; i<=13; i++)
