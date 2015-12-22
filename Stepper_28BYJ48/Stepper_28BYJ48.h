@@ -56,7 +56,7 @@ public:
 	void etapa8HalfStep();
 
 private:
-
+    int  etapaActual;
 	void moverMotorUnStep(bool sentidoHorario);
 	void moverUnStep(bool sentidoHorario,int tamanoStep);
 

@@ -13,6 +13,7 @@ Stepper_28BYJ48::Stepper_28BYJ48()
 
 Stepper_28BYJ48::Stepper_28BYJ48(int PIN_FASE1,int PIN_FASE2,int PIN_FASE3,int PIN_FASE4,int tamanoStep, int pinSensor)
 {
+  etapaActual = 1;
   Inicializar(PIN_FASE1,PIN_FASE2,PIN_FASE3,PIN_FASE4,tamanoStep,pinSensor);
 }
 
@@ -267,7 +268,6 @@ bool Stepper_28BYJ48::hayCampoPresente()
 
 void Stepper_28BYJ48::moverUnStep(bool sentidoHorario,int tamanoStep)
 {
-  static int etapaActual = 1;
   if(sentidoHorario)
   {
     _posicionMotorActual++;
