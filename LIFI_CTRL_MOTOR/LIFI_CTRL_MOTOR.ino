@@ -6,12 +6,12 @@
 
 // Define el ID del arduino en uso para calcular las posiciones
 // de los motores
-#define arduinoID 1
+#define arduinoID 2
 // Define la cantidad de pasos a considerar radialmente
 // para el buffer de un motor
-#define maxPasosRadiales 20
+#define maxPasosRadiales 5
 // Define el minimo radio necesario para generar una respuesta
-#define minPasosRadiales 10
+#define minPasosRadiales 0
 // Distancia entre radios equidistantes de un motor
 #define pasosSize 10
 // Define el step del buffer que es integrado para la posicion
@@ -19,9 +19,9 @@
 #define stepIntegracion 5
 // Factor de la distacia recorrida por el usuario para acentuar
 // o disminuir el efecto sobre el movimiento
-#define sensibilidadMovimiento 10.0
+#define sensibilidadMovimiento 5.0
 // Cantidad de steps de motor entre calculos de posicion
-#define stepsPorCiclo 512
+#define stepsPorCiclo 150
 //Corresponde a todos los motores controlador por un cada 
 //arduino mega 2560, pueden ser hasta 13.
 Stepper_28BYJ48 _motor[13];
@@ -58,14 +58,16 @@ int globalCounter = 0;
 // Velocidades de rotacion
 double velocidad[13];
 
+bool acercando;
+
 void setup()
 {
   Serial.begin(9600); // Comunicacion serial
   ET.begin(details(mydata), &Serial);
   inicializarArrays();
   inicializarMotores();
-  //acercando = true;            // Simulacion del radar
-  //posicionUsuario[0][1] = 105; // Simulacion del radar
+  acercando = true;            // Simulacion del radar
+  posicionUsuario[0][1] = 105; // Simulacion del radar
   //Serial.println("Iniciado");
 }
 
@@ -73,6 +75,7 @@ void loop()
 {
   if(globalCounter == 0)
   {
+    //Serial.println("loop");
     obtenerPosicionUsuario();
     calcularPosiciones();
   }
@@ -90,19 +93,21 @@ void obtenerPosicionUsuario()
   posicionUsuario[1][0] = posicionUsuario[0][0];
   posicionUsuario[1][1] = posicionUsuario[0][1];
   
-  if(ET.receiveData())
+  
+  while(ET.receiveData())
   {
-    String anguloString = String(mydata.angulo);
-    String distanciaString = String(mydata.distanciaCM);
-    Serial.println("angulo = " + anguloString + " distancia = " + distanciaString);
+    //String anguloString = String(mydata.angulo);
+    //String distanciaString = String(mydata.distanciaCM);
+    //Serial.println("angulo = " + anguloString + " distancia = " + distanciaString);
     posicionUsuario[0][0] = mydata.angulo;
     posicionUsuario[0][1] = mydata.distanciaCM;
+    //Serial.println("Data: " + String(posicionUsuario[0][0]) + " - " + String(posicionUsuario[0][1]));
+    //Serial.println(".");
   } 
   
-  /*
   ////////////////////////////////////////////////////////////
   // Simulador de radar
-  
+  /*
   posicionUsuario[0][0] = 0;
   if(acercando)
   {
@@ -120,9 +125,9 @@ void obtenerPosicionUsuario()
       acercando = true;
     }
   }
-  
-  ////////////////////////////////////////////////////////////
   */
+  ////////////////////////////////////////////////////////////
+  
   for(int i=1; i<=13; i++)
   {
     contadorCiclo[nMotor(i)] = 0;
@@ -138,20 +143,22 @@ void calcularPosiciones()
   {
     int distanciaFinal = distanciaPuntoFinal(i);
     double variacionAngular = traslacionAngular(i);
-    int affectedStep = distanciaFinal / pasosSize;
-    if(affectedStep < minPasosRadiales || affectedStep > maxPasosRadiales - 1)
-    {
-      // fuera de rango re respuesta
-    } else {
+    int affectedStep = 5; // distanciaFinal / pasosSize;
+    //if(affectedStep < minPasosRadiales || affectedStep > maxPasosRadiales - 1)
+    //{
+    //  // fuera de rango re respuesta
+    //} else {
       int movimiento = (variacionAngular > 0) ? -1 : 1; 
       movimiento *= recorrido;
-      bufferActivacion[nMotor(i)][affectedStep] += movimiento;
-    }
+      bufferActivacion[nMotor(i)][affectedStep-0] += movimiento;
+      bufferActivacion[nMotor(i)][affectedStep-1] += movimiento;
+      bufferActivacion[nMotor(i)][affectedStep-2] += movimiento;
+    //}
     for(int j=1;j<maxPasosRadiales;j++)
     {
       bufferActivacion[nMotor(i)][j-1] = bufferActivacion[nMotor(i)][j];
     }
-    bufferActivacion[nMotor(i)][maxPasosRadiales-1] = 0;
+    bufferActivacion[nMotor(i)][maxPasosRadiales-1] = bufferActivacion[nMotor(i)][maxPasosRadiales-2]/1.5;
   }
   for(int i=1;i<=13;i++)
   {
@@ -159,20 +166,30 @@ void calcularPosiciones()
     {
       registroPosicion[nMotor(i)][j] = registroPosicion[nMotor(i)][j-1];
     }
-    registroPosicion[nMotor(i)][0] += bufferActivacion[nMotor(i)][stepIntegracion-0];
-    registroPosicion[nMotor(i)][0] += bufferActivacion[nMotor(i)][stepIntegracion-1];
-    registroPosicion[nMotor(i)][0] += bufferActivacion[nMotor(i)][stepIntegracion-2];
-    registroPosicion[nMotor(i)][0] += bufferActivacion[nMotor(i)][stepIntegracion-3];
-    registroPosicion[nMotor(i)][0] += bufferActivacion[nMotor(i)][stepIntegracion-4];
-    registroPosicion[nMotor(i)][0] += bufferActivacion[nMotor(i)][stepIntegracion-5];
+    int toIntegrate = 0;
+    toIntegrate += bufferActivacion[nMotor(i)][stepIntegracion-0];
+    toIntegrate += bufferActivacion[nMotor(i)][stepIntegracion-1];
+    toIntegrate += bufferActivacion[nMotor(i)][stepIntegracion-2];
+    toIntegrate += bufferActivacion[nMotor(i)][stepIntegracion-3];
+    toIntegrate += bufferActivacion[nMotor(i)][stepIntegracion-4];
+    toIntegrate += bufferActivacion[nMotor(i)][stepIntegracion-5];
+    while(abs(toIntegrate) > stepsPorCiclo)
+    {
+      toIntegrate /= 2;
+    }
+    registroPosicion[nMotor(i)][0] += toIntegrate;
     if(registroPosicion[nMotor(i)][0] > 2047)
     {
       registroPosicion[nMotor(i)][0] -= 2048;
     }
-    if(registroPosicion[nMotor(i)][0] < 0){
+    if(registroPosicion[nMotor(i)][0] < 0)
+    {
       registroPosicion[nMotor(i)][0] += 2048;
     }
     int nStep = calcularSteps(registroPosicion[nMotor(i)][0], registroPosicion[nMotor(i)][1]);
+    //if(i==1){
+    //  Serial.println("corr: " + String(registroPosicion[nMotor(i)][0]));
+    //}
     if(nStep != 0)
     {
       velocidad[nMotor(i)] = (double)stepsPorCiclo;
